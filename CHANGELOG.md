@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 - 2026-10-13
+
+- CI: harden workflows (actions pinned to SHAs, least-privilege permissions, persist-credentials: false)
+
 ## 1.0.3 - 2026-10-13
 - Fix: add `"./package.json"` to `exports` so `require('header-sentinel/package.json')` and `import ... with { type: 'json' }` no longer throw `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 
