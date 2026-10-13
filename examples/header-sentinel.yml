@@ -1,0 +1,20 @@
+# Copy to .github/workflows/security-headers.yml in your project
+name: Security headers
+on:
+  deployment_status:
+  schedule: [{ cron: '0 6 * * 1' }]
+  workflow_dispatch:
+permissions: { contents: read, security-events: write }
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MrLouisWright/header-sentinel@v1
+        with:
+          urls: https://example.com https://example.com/login
+          fail-on: error
+          sarif: header-sentinel.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: header-sentinel.sarif }

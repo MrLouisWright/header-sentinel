@@ -1,0 +1,19 @@
+{
+  "name": "header-sentinel",
+  "version": "1.0.0",
+  "description": "CI-friendly CLI and API that fails builds when deployed URLs are missing or misconfigure HTTP security headers (HSTS, CSP, COOP, cookies...) with specific fixes. JSON & SARIF output.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": { ".": { "types": "./src/index.d.ts", "default": "./src/index.js" } },
+  "bin": { "header-sentinel": "bin/header-sentinel.js" },
+  "files": ["src", "bin", "README.md", "CHANGELOG.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node --test test/" },
+  "keywords": ["security","headers","security-headers","csp","hsts","content-security-policy","ci","cli","github-action","sarif","owasp","devsecops","http"],
+  "author": "Louis Wright (https://github.com/MrLouisWright)",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/MrLouisWright/header-sentinel.git" },
+  "bugs": { "url": "https://github.com/MrLouisWright/header-sentinel/issues" },
+  "homepage": "https://github.com/MrLouisWright/header-sentinel#readme"
+}

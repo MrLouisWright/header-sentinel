@@ -1,0 +1,8 @@
+{
+  "urls": ["https://example.com"],
+  "failOn": "error",
+  "timeout": 10000,
+  "headers": { "User-Agent": "my-ci" },
+  "ignore": ["coop", "info-leak-server"],
+  "severity": { "permissions-policy": "error", "csp-unsafe-inline": "off" }
+}

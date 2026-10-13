@@ -1,0 +1,29 @@
+name: 'header-sentinel'
+description: 'Fail CI when deployed URLs are missing or misconfigure HTTP security headers'
+author: 'Louis Wright'
+branding: { icon: 'shield', color: 'red' }
+inputs:
+  urls: { description: 'Space- or newline-separated URLs to scan', required: true }
+  fail-on: { description: 'error | warn | none', default: 'error' }
+  config: { description: 'Path to JSON config file', default: '' }
+  timeout: { description: 'Request timeout in ms', default: '10000' }
+  sarif: { description: 'Write SARIF to this path (upload with github/codeql-action/upload-sarif)', default: '' }
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with: { node-version: '20' }
+    - shell: bash
+      env:
+        HS_URLS: ${{ inputs.urls }}
+        HS_FAIL_ON: ${{ inputs.fail-on }}
+        HS_CONFIG: ${{ inputs.config }}
+        HS_TIMEOUT: ${{ inputs.timeout }}
+        HS_SARIF: ${{ inputs.sarif }}
+        FORCE_COLOR: '1'
+      run: |
+        args=(--fail-on "$HS_FAIL_ON" --timeout "$HS_TIMEOUT")
+        [ -n "$HS_CONFIG" ] && args+=(--config "$HS_CONFIG")
+        [ -n "$HS_SARIF" ] && args+=(--sarif "$HS_SARIF")
+        # shellcheck disable=SC2086
+        node "${{ github.action_path }}/bin/header-sentinel.js" $HS_URLS "${args[@]}"
