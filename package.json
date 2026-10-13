@@ -1,6 +1,6 @@
 {
   "name": "header-sentinel",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CI-friendly CLI and API that fails builds when deployed URLs are missing or misconfigure HTTP security headers (HSTS, CSP, COOP, cookies...) with specific fixes. JSON & SARIF output.",
   "type": "module",
   "main": "./src/index.js",
