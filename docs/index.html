@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>header-sentinel · Fail CI when deployed URLs ship weak HTTP security headers.</title>
+<meta name="description" content="Fail CI when deployed URLs ship weak HTTP security headers. Scans live URLs for HSTS, CSP, COOP, frame protection, cookies and more, then gives you a specific fix for every problem, with Nginx, Express, Vercel and Netlify hints. Mozilla HTTP Observatory-style grades from A+ to F. Zero runtime depend">
+<meta name="theme-color" content="#07090c">
+<link rel="canonical" href="https://mrlouiswright.github.io/header-sentinel/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="header-sentinel: Fail CI when deployed URLs ship weak HTTP security headers.">
+<meta property="og:description" content="Fail CI when deployed URLs ship weak HTTP security headers. Scans live URLs for HSTS, CSP, COOP, frame protection, cookies and more, then gives you a specific fix for every problem, with Nginx, Express, Vercel and Netlify hints. Mozilla HTTP Observatory-style grades from A+ to F. Zero runtime depend">
+<meta property="og:url" content="https://mrlouiswright.github.io/header-sentinel/">
+<meta property="og:image" content="https://mrlouiswright.github.io/header-sentinel/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="header-sentinel: Fail CI when deployed URLs ship weak HTTP security headers.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="header-sentinel">
+<meta name="twitter:description" content="Fail CI when deployed URLs ship weak HTTP security headers.">
+<meta name="twitter:image" content="https://mrlouiswright.github.io/header-sentinel/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>:root{--accent:#22d3ee;--accent-2:#0e7490}</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="./"><span class="brand-g" aria-hidden="true">H</span>header-sentinel</a>
+    <nav aria-label="Primary"><ul>
+      <li><a href="#features">Features</a></li><li><a href="#usage">Usage</a></li><li><a href="#ci">CI</a></li><li><a href="#options">Options</a></li>
+      <li><a class="gh" href="https://github.com/MrLouisWright/header-sentinel">GitHub</a></li>
+    </ul></nav>
+  </div>
+</header>
+<main id="main">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="dot" aria-hidden="true"></span> npm package · MIT · Node ≥ 18</p>
+      <h1>header-sentinel</h1>
+      <p class="tagline">Fail CI when deployed URLs ship weak HTTP security headers.</p>
+      <p class="lede">Scans live URLs for HSTS, CSP, COOP, frame protection, cookies and more, then gives you a specific fix for every problem, with Nginx, Express, Vercel and Netlify hints. Mozilla HTTP Observatory-style grades from A+ to F. Zero runtime dependencies.</p>
+      <div class="install">
+        <code id="install-cmd"><span class="prompt" aria-hidden="true">$</span> npm i -D header-sentinel</code>
+        <button class="copy" type="button" data-copy="npm i -D header-sentinel" aria-label="Copy install command">Copy</button>
+        <span class="sr-only" role="status" aria-live="polite" id="copy-status"></span>
+      </div>
+      <div class="ctas">
+        <a class="btn primary" href="https://github.com/MrLouisWright/header-sentinel#readme">Read the docs</a>
+        <a class="btn" href="https://www.npmjs.com/package/header-sentinel">View on npm</a>
+        <a class="btn" href="https://github.com/MrLouisWright/header-sentinel">Source on GitHub</a>
+      </div>
+      <div class="badges">
+        <a href="https://www.npmjs.com/package/header-sentinel"><img src="https://img.shields.io/npm/v/header-sentinel.svg?style=flat-square&amp;color=111" alt="npm version of header-sentinel" height="20"></a>
+        <a href="https://github.com/MrLouisWright/header-sentinel/actions/workflows/ci.yml"><img src="https://github.com/MrLouisWright/header-sentinel/actions/workflows/ci.yml/badge.svg" alt="CI status" height="20"></a>
+        <a href="https://github.com/MrLouisWright/header-sentinel/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT" height="20"></a>
+        <a href="https://github.com/MrLouisWright/header-sentinel"><img src="https://img.shields.io/github/stars/MrLouisWright/header-sentinel?style=flat-square" alt="GitHub stars for header-sentinel" height="20"></a>
+      </div>
+    </div>
+    <figure class="term" aria-label="Example terminal session running header-sentinel">
+      <div class="term-bar"><span></span><span></span><span></span><em>~/project — zsh</em></div>
+      <pre class="term-body" data-cmd="npx header-sentinel https://github.com --no-http-upgrade --no-preload-check"><span class="ln cmd"><span class="prompt">$</span> <span class="typed">npx header-sentinel https://github.com --no-http-upgrade --no-preload-check</span><span class="caret" aria-hidden="true"></span></span><span class="out"><span class="ln dim">&nbsp;</span><span class="ln b">https://github.com/ (HTTP 200)  Grade B+ score 80/100 · MEDIUM risk</span><span class="ln w">  ⚠ warn  CSP style-src allows 'unsafe-inline' [csp-unsafe-inline]</span><span class="ln dim">  ...</span></span></pre>
+      <figcaption class="sr-only">Sample output adapted from the header-sentinel README.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="sec" id="problem">
+  <div class="wrap narrow">
+    <h2><span class="h-idx">01</span> The problem</h2>
+    <p class="big">Security headers drift. A CDN change, a new reverse proxy or a framework upgrade quietly drops HSTS or loosens your CSP, and nobody notices until an audit.</p>
+    <p class="big">header-sentinel checks the headers your deployed site actually sends, grades them the way Mozilla HTTP Observatory does, and fails the build with a concrete fix, so regressions get caught in CI rather than in a pentest report.</p>
+  </div>
+</section>
+
+<section class="sec" id="features">
+  <div class="wrap">
+    <h2><span class="h-idx">02</span> Features</h2>
+    <div class="grid">
+      <article class="card"><span class="card-i" aria-hidden="true">01</span><h3>Observatory-style grades</h3><p>Starts at 100, applies penalties then bonuses, and maps to A+ … F buckets with a LOW/MEDIUM likelihood indicator.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">02</span><h3>A fix for every finding</h3><p>Each problem comes with an example header plus Nginx, Express, Vercel and Netlify hints.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">03</span><h3>HSTS &amp; redirects</h3><p>Checks max-age ≥ 1 year, includeSubDomains, preload eligibility, and HTTP→HTTPS redirect chains.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">04</span><h3>CSP lint</h3><p>Flags missing CSP, unsafe-inline / unsafe-eval, overly broad wildcards and missing directives.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">05</span><h3>Baseline mode</h3><p>Record accepted findings once, then only fail on new issues in PRs and nightly runs.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">06</span><h3>Sitemap scanning</h3><p>Load every URL from sitemap.xml with --sitemap, repeatable.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">07</span><h3>JSON &amp; SARIF</h3><p>--json exposes score, grade and observatory tests; --sarif feeds GitHub code scanning.</p></article>
+      <article class="card"><span class="card-i" aria-hidden="true">08</span><h3>Zero dependencies</h3><p>Node ≥ 18, ESM and CommonJS, with generated TypeScript types.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="usage">
+  <div class="wrap">
+    <h2><span class="h-idx">03</span> Usage</h2>
+    <div class="usage">
+      <div class="u"><p class="u-t"># Ad-hoc scan</p><pre><code><span class="prompt" aria-hidden="true">$</span> npx header-sentinel https://example.com</code></pre></div>
+      <div class="u"><p class="u-t"># Record a baseline on main</p><pre><code><span class="prompt" aria-hidden="true">$</span> npx header-sentinel https://example.com --baseline .header-baseline.json --update-baseline</code></pre></div>
+      <div class="u"><p class="u-t"># Fail only on new issues</p><pre><code><span class="prompt" aria-hidden="true">$</span> npx header-sentinel https://example.com --baseline .header-baseline.json --fail-on error</code></pre></div>
+      <div class="u"><p class="u-t"># Scan a whole sitemap</p><pre><code><span class="prompt" aria-hidden="true">$</span> npx header-sentinel --sitemap https://example.com/sitemap.xml --baseline .header-baseline.json</code></pre></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="sec" id="ci">
+  <div class="wrap">
+    <h2><span class="h-idx">04</span> CI / GitHub Action</h2>
+    <pre class="code yaml"><code>name: Security headers
+on:
+  deployment_status:
+  schedule: [{ cron: '0 6 * * 1' }]
+  workflow_dispatch:
+permissions: { contents: read, security-events: write }
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MrLouisWright/header-sentinel@v1
+        with:
+          urls: https://example.com https://example.com/login
+          fail-on: error
+          sarif: header-sentinel.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: header-sentinel.sarif }</code></pre>
+  </div>
+</section>
+
+<section class="sec" id="options">
+  <div class="wrap">
+    <h2><span class="h-idx">05</span> Options &amp; flags</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th scope="col">Flag</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>-c, --config &lt;file&gt;</code></td><td>JSON config (default: .headerguardrc.json / .headersentinelrc.json if present)</td></tr>
+        <tr><td><code>--fail-on &lt;level&gt;</code></td><td>error | warn | none (default: error)</td></tr>
+        <tr><td><code>--json</code></td><td>Print JSON results (includes observatory score/tests)</td></tr>
+        <tr><td><code>--sarif [file]</code></td><td>Print SARIF 2.1.0 (or write to file)</td></tr>
+        <tr><td><code>--sitemap &lt;url&gt;</code></td><td>Load URLs from sitemap.xml (repeatable)</td></tr>
+        <tr><td><code>--baseline &lt;file&gt;</code></td><td>Only fail on findings not in baseline</td></tr>
+        <tr><td><code>--update-baseline</code></td><td>Write current fingerprints to --baseline</td></tr>
+        <tr><td><code>--no-http-upgrade</code></td><td>Skip HTTP→HTTPS redirect analysis</td></tr>
+        <tr><td><code>--no-preload-check</code></td><td>Skip HSTS preload list / eligibility lookups</td></tr>
+        <tr><td><code>-t, --timeout &lt;ms&gt;</code></td><td>Request timeout (default: 10000)</td></tr>
+        <tr><td><code>-H, --header "K: V"</code></td><td>Extra request header (repeatable)</td></tr>
+        <tr><td><code>--no-follow-redirects</code></td><td>Check the first response instead of the final one</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Full reference, config file format and API in the <a href="https://github.com/MrLouisWright/header-sentinel#readme">README</a>.</p>
+  </div>
+</section>
+
+<section class="sec more" id="more">
+  <div class="wrap">
+    <h2><span class="h-idx">06</span> More tools by Louis Wright</h2>
+    <div class="tools">
+<a class="tool" href="https://mrlouiswright.github.io/bundle-secret-guard/" style="--a:#f43f5e"><span class="tool-g" aria-hidden="true">S</span><span><strong>bundle-secret-guard</strong><small>Fail the build when secrets ship to the browser.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/cookie-sentinel/" style="--a:#fbbf24"><span class="tool-g" aria-hidden="true">K</span><span><strong>cookie-sentinel</strong><small>Audit the cookies your site sets before attackers do.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/csp-forge/" style="--a:#f59e0b"><span class="tool-g" aria-hidden="true">C</span><span><strong>csp-forge</strong><small>Generate a tight Content-Security-Policy from your built site.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/form-honeypot-guard/" style="--a:#a3e635"><span class="tool-g" aria-hidden="true">F</span><span><strong>form-honeypot-guard</strong><small>Block form spam bots without a captcha.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/license-sentinel/" style="--a:#60a5fa"><span class="tool-g" aria-hidden="true">⚖</span><span><strong>license-sentinel</strong><small>A license compliance gate for npm projects, plus CycloneDX/SPDX SBOMs and a NOTICES file.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/package-tripwire/" style="--a:#fb923c"><span class="tool-g" aria-hidden="true">P</span><span><strong>package-tripwire</strong><small>Fail CI when dependency changes look suspicious.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/sri-sentinel/" style="--a:#34d399"><span class="tool-g" aria-hidden="true">I</span><span><strong>sri-sentinel</strong><small>Subresource Integrity for your built site: generate, write and check it in CI.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/static-link-sentinel/" style="--a:#a78bfa"><span class="tool-g" aria-hidden="true">L</span><span><strong>static-link-sentinel</strong><small>Fail CI on broken links before you deploy.</small></span></a>
+<a class="tool" href="https://mrlouiswright.github.io/workflow-sentinel/" style="--a:#2dd4bf"><span class="tool-g" aria-hidden="true">W</span><span><strong>workflow-sentinel</strong><small>Catch insecure GitHub Actions workflows before they're merged.</small></span></a>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p>MIT © <a href="https://github.com/MrLouisWright">Louis Wright</a></p>
+    <p><a href="https://github.com/MrLouisWright/header-sentinel">GitHub</a> · <a href="https://www.npmjs.com/package/header-sentinel">npm</a> · <a href="https://github.com/MrLouisWright/header-sentinel#readme">README</a></p>
+  </div>
+</footer>
+<script src="app.js" defer></script>
+</body>
+</html>
