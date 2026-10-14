@@ -22,3 +22,16 @@ test('import("header-sentinel/package.json") with JSON attributes', async () => 
   const m = await import(resolved, { with: { type: 'json' } }).catch(() => import(resolved, { assert: { type: 'json' } }));
   assert.equal(m.default.name, 'header-sentinel');
 });
+
+test('require("header-sentinel") loads CJS build', () => {
+  const mod = require('header-sentinel');
+  assert.equal(typeof mod.scan, 'function');
+  assert.equal(typeof mod.computeObservatoryScore, 'function');
+  assert.equal(typeof mod.gradeFromScore, 'function');
+});
+
+test('import("header-sentinel") loads ESM build', async () => {
+  const mod = await import('header-sentinel');
+  assert.equal(typeof mod.scanAll, 'function');
+  assert.equal(typeof mod.evaluateObservatory, 'function');
+});

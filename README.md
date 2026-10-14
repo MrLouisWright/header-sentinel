@@ -6,7 +6,7 @@
 ![node >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 ![zero deps](https://img.shields.io/badge/dependencies-0-success)
 
-Fail your CI when deployed URLs are missing or misconfigure HTTP security headers — with a **specific fix** (example header + Nginx/Express/Vercel/Netlify hints) for every problem. Zero dependencies, Node ≥ 18, JSON and SARIF (GitHub code scanning) output.
+Fail your CI when deployed URLs are missing or misconfigure HTTP security headers — with a **specific fix** (example header + Nginx/Express/Vercel/Netlify hints) for every problem. **Mozilla HTTP Observatory-style** letter grades (A+ through F), zero runtime dependencies, Node ≥ 18, JSON and SARIF (GitHub code scanning) output.
 
 ## Install
 
@@ -15,8 +15,6 @@ npm i -D header-sentinel        # or run ad-hoc:
 npx header-sentinel https://example.com
 ```
 
-
-
 ## Usage
 
 ```
@@ -24,8 +22,13 @@ header-sentinel <url...> [options]
 
   -c, --config <file>       JSON config (default: .headerguardrc.json / .headersentinelrc.json if present)
       --fail-on <level>     error | warn | none   (default: error)
-      --json                Print JSON results
+      --json                Print JSON results (includes observatory score/tests)
       --sarif [file]        Print SARIF 2.1.0 (or write to file)
+      --sitemap <url>       Load URLs from sitemap.xml (repeatable)
+      --baseline <file>     Only fail on findings not in baseline
+      --update-baseline     Write current fingerprints to --baseline
+      --no-http-upgrade     Skip HTTP→HTTPS redirect analysis
+      --no-preload-check    Skip HSTS preload list / eligibility lookups
   -t, --timeout <ms>        Request timeout (default: 10000)
   -H, --header "K: V"       Extra request header (repeatable)
       --no-follow-redirects Check the first response instead of the final one (default follows)
@@ -33,55 +36,61 @@ header-sentinel <url...> [options]
 
 Exit codes: `0` pass, `1` findings at/above `--fail-on`, `2` usage error. Colours are disabled when `NO_COLOR` is set or stdout is not a TTY (`FORCE_COLOR=1` forces them).
 
+### Scoring (Mozilla Observatory)
+
+Sites start at **100**. Penalties apply first; **bonuses** (for example strong CSP, Referrer-Policy, frame-ancestors, HSTS preload) apply only if the pre-bonus score is **≥ 90**. Grades use Observatory buckets: **A+** (100+), **A**, **A-**, **B+** … **F** (0–24). Each scan also reports a **likelihood indicator** (LOW/MEDIUM) derived from the grade.
+
+Detailed header lint findings (severity error/warn) are separate from Observatory test keys; CI failure is still driven by `--fail-on` and findings, while `--json` exposes `score`, `grade`, and `observatory.tests[]`.
+
 ### Sample output
 
 ```
-$ npx header-sentinel https://github.com
+$ npx header-sentinel https://github.com --no-http-upgrade --no-preload-check
 
-https://github.com/ (HTTP 200)  Grade B score 80/100
+https://github.com/ (HTTP 200)  Grade B+ score 80/100 · MEDIUM risk
   ⚠ warn  CSP style-src allows 'unsafe-inline' [csp-unsafe-inline]
-          'unsafe-inline' in style-src defeats XSS protection.
-          fix: Replace 'unsafe-inline' with nonces ('nonce-<random>') or hashes ('sha256-...').
-  ⚠ warn  Permissions-Policy missing [permissions-policy]
-          Powerful browser features (camera, geolocation...) are not restricted.
-          fix: Add: Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
-            Nginx: add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-  ⚠ warn  Cross-Origin-Opener-Policy missing [coop]
-          Window is not isolated from cross-origin openers (XS-Leaks/Spectre).
-          fix: Add: Cross-Origin-Opener-Policy: same-origin (or same-origin-allow-popups if you rely on OAuth popups)
-  ⚠ warn  Cookie "_octo" missing HttpOnly [cookies]
-          Set-Cookie: _octo=GH1.1.1534189212.1791915518; expires=Wed, 13 Oct 2027 18:18:38 GMT; domain=.github.com; path=/; secure; SameSite=L
-          fix: Example: Set-Cookie: _octo=...; Path=/; Secure; HttpOnly; SameSite=Lax
-            Express: res.cookie(name, v, { secure: true, httpOnly: true, sameSite: "lax" })  (omit HttpOnly only if JS must read it)
-
-1 URL(s) scanned: 0 errors, 4 warning(s)
+  ...
 ```
 
-Score: 100 minus 15 per error and 5 per warning → grade A+ (≥95), A (≥85), B (≥70), C (≥55), D (≥40), F.
+### Baseline (CI: fail only on new issues)
+
+```bash
+# First run on main — record accepted findings
+npx header-sentinel https://example.com --baseline .header-baseline.json --update-baseline
+
+# PR / nightly — exit 1 only if something new appears
+npx header-sentinel https://example.com --baseline .header-baseline.json --fail-on error
+```
+
+### Sitemap mode
+
+```bash
+npx header-sentinel --sitemap https://example.com/sitemap.xml --baseline .header-baseline.json
+```
 
 ## Checks
 
+| id | severity | what |
+| --- | --- | --- |
+| `hsts` | error | `Strict-Transport-Security` on HTTPS with `max-age` ≥ 31536000 |
+| `hsts-subdomains` | warn | HSTS includes `includeSubDomains` |
+| `hsts-preload-eligible` | warn | Header meets preload submission requirements (not yet on preload list) |
+| `redirection` | error/warn | HTTP→HTTPS upgrade / redirect chain (Observatory-aligned) |
+| `csp` | error | `Content-Security-Policy` present (live header lint only; use [csp-forge](https://github.com/MrLouisWright/csp-forge) to build policies) |
+| `csp-unsafe-inline` / `csp-unsafe-eval` | warn | unsafe keywords in *-src |
+| `csp-wildcard` | warn | overly broad sources |
+| `csp-missing-*` | warn | important directives missing |
+| `frame-options` | error | `X-Frame-Options` or CSP `frame-ancestors` |
+| `content-type-options` | error | `X-Content-Type-Options: nosniff` |
+| `referrer-policy` | warn/error | safe Referrer-Policy |
+| `permissions-policy` | warn | `Permissions-Policy` present |
+| `coop` | warn | `Cross-Origin-Opener-Policy` |
+| `info-leak-*` | warn | `Server` / `X-Powered-By` leaks |
+| `cookies` | warn | Set-Cookie **presence only** — run [cookie-sentinel](https://github.com/MrLouisWright/cookie-sentinel) for full cookie audits |
+| `x-xss-protection` | warn | deprecated header enabled |
+| `fetch` | error | URL could not be fetched |
 
-| id                                                                           | severity   | what                                                                                                     |
-| ---------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
-| `hsts`                                                                       | error      | `Strict-Transport-Security` present on HTTPS with `max-age` ≥ 31536000                                   |
-| `hsts-subdomains`                                                            | warn       | HSTS includes `includeSubDomains`                                                                        |
-| `csp`                                                                        | error      | `Content-Security-Policy` present                                                                        |
-| `csp-unsafe-inline` / `csp-unsafe-eval`                                      | warn       | `'unsafe-inline'` (without nonce/hash) or `'unsafe-eval'` in a *-src directive                           |
-| `csp-wildcard`                                                               | warn       | `*`, `http:`, `https:` (or `data:` in script/default-src) sources                                        |
-| `csp-missing-default-src` / `-object-src` / `-base-uri` / `-frame-ancestors` | warn       | important directives missing                                                                             |
-| `frame-options`                                                              | error      | `X-Frame-Options: DENY/SAMEORIGIN` or CSP `frame-ancestors`                                              |
-| `content-type-options`                                                       | error      | `X-Content-Type-Options: nosniff`                                                                        |
-| `referrer-policy`                                                            | warn/error | present and a safe value (`unsafe-url`/invalid = error)                                                  |
-| `permissions-policy`                                                         | warn       | `Permissions-Policy` present                                                                             |
-| `coop`                                                                       | warn       | `Cross-Origin-Opener-Policy: same-origin` (or `-allow-popups`)                                           |
-| `info-leak-server` / `info-leak-powered-by`                                  | warn       | `Server` with version, `X-Powered-By`, `X-AspNet-Version`                                                |
-| `cookies`                                                                    | error/warn | `Set-Cookie` without `Secure` (error, HTTPS) / `HttpOnly` / `SameSite`; `SameSite=None` without `Secure` |
-| `x-xss-protection`                                                           | warn       | deprecated header set to anything other than `0`                                                         |
-| `fetch`                                                                      | error      | URL could not be fetched / timed out                                                                     |
-
-
-
+No TLS certificate or DNS checks (see **tls-sentinel** / **dns-sentinel**).
 
 ## Config
 
@@ -90,24 +99,23 @@ Score: 100 minus 15 per error and 5 per warning → grade A+ (≥95), A (≥85),
 ```json
 {
   "urls": ["https://example.com"],
+  "sitemap": "https://example.com/sitemap.xml",
+  "baseline": ".header-baseline.json",
   "failOn": "error",
   "timeout": 10000,
+  "checkHttpRedirection": true,
+  "checkPreload": true,
   "headers": { "User-Agent": "my-ci" },
   "ignore": ["coop", "info-leak-server"],
   "severity": { "permissions-policy": "error", "csp-unsafe-inline": "off" }
 }
 ```
 
-`ignore` / `severity` accept a specific id (`csp-unsafe-inline`) or a check group (`csp`, `info-leak`, `hsts`). Severity `"off"` disables it.
-
 ## CI
-
-
 
 ### GitHub Actions (action)
 
 ```yaml
-# Copy to .github/workflows/security-headers.yml in your project
 name: Security headers
 on:
   deployment_status:
@@ -129,46 +137,39 @@ jobs:
         with: { sarif_file: header-sentinel.sarif }
 ```
 
-
-
 ### GitHub Actions (npx)
 
 ```yaml
 - uses: actions/setup-node@v4
   with: { node-version: 20 }
-- run: npx header-sentinel@1 https://staging.example.com --fail-on error
+- run: npx header-sentinel@1 https://staging.example.com --json --fail-on error
 ```
-
-
-
-### GitLab CI
-
-```yaml
-security-headers:
-  image: node:20-alpine
-  stage: test
-  script:
-    - npx header-sentinel@1 "$CI_ENVIRONMENT_URL" --json > headers.json
-  artifacts:
-    when: always
-    paths: [headers.json]
-```
-
-
 
 ## API
 
+**ESM**
+
 ```js
-import { scan, scanAll, analyze, shouldFail, toSarif } from 'header-sentinel';
-
-const results = await scanAll(['https://example.com'], { timeout: 5000, config: { ignore: ['coop'] } });
-if (shouldFail(results, 'error')) process.exit(1);
-
-// offline: analyze headers you already have
-analyze({ url: 'https://x.test', headers: { 'x-content-type-options': 'nosniff' } });
+import { scan, scanAll, analyze, shouldFail, toSarif, computeObservatoryScore } from 'header-sentinel';
 ```
 
-Types ship in `src/index.d.ts`.
+**CommonJS**
+
+```js
+const { scan, shouldFail } = require('header-sentinel');
+```
+
+```js
+const results = await scanAll(['https://example.com'], {
+  timeout: 5000,
+  config: { ignore: ['coop'] },
+  checkHttpRedirection: true,
+});
+console.log(results[0].grade, results[0].observatory.tests);
+if (shouldFail(results, 'error')) process.exit(1);
+```
+
+Types are generated in `dist/index.d.ts` (`import` / `require` typings via `dist/index.d.cts`).
 
 ## License
 

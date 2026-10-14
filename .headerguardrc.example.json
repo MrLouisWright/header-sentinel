@@ -1,8 +1,13 @@
 {
   "urls": ["https://example.com"],
+  "sitemap": "https://example.com/sitemap.xml",
+  "baseline": ".header-baseline.json",
   "failOn": "error",
   "timeout": 10000,
-  "headers": { "User-Agent": "my-ci" },
-  "ignore": ["coop", "info-leak-server"],
-  "severity": { "permissions-policy": "error", "csp-unsafe-inline": "off" }
+  "maxUrls": 200,
+  "checkHttpRedirection": true,
+  "checkPreload": true,
+  "headers": {},
+  "ignore": [],
+  "severity": {}
 }

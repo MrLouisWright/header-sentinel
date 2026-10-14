@@ -1,14 +1,21 @@
 {
   "name": "header-sentinel",
-  "version": "1.0.4",
-  "description": "CI-friendly CLI and API that fails builds when deployed URLs are missing or misconfigure HTTP security headers (HSTS, CSP, COOP, cookies...) with specific fixes. JSON & SARIF output.",
+  "version": "1.1.0",
+  "description": "CI-friendly CLI and API that fails builds when deployed URLs are missing or misconfigure HTTP security headers (HSTS, CSP, COOP, cookies...) with specific fixes. Mozilla Observatory-style A–F grades, JSON & SARIF output.",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -16,6 +23,7 @@
     "header-sentinel": "bin/header-sentinel.js"
   },
   "files": [
+    "dist",
     "src",
     "bin",
     "README.md",
@@ -26,7 +34,13 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "build": "tsup",
+    "test": "npm run build && node --test test/*.test.js",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
   },
   "keywords": [
     "security",
@@ -35,6 +49,7 @@
     "csp",
     "hsts",
     "content-security-policy",
+    "mozilla-observatory",
     "ci",
     "cli",
     "github-action",

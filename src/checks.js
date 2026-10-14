@@ -106,21 +106,15 @@ export const CHECKS = {
   },
 
   cookies(ctx) {
-    const out = [];
-    for (const c of ctx.setCookies) {
-      const [nv, ...attrs] = c.split(';').map(s => s.trim());
-      const name = nv.split('=')[0];
-      const a = attrs.map(x => x.toLowerCase());
-      const missing = [];
-      if (ctx.isHttps && !a.includes('secure')) missing.push('Secure');
-      if (!a.includes('httponly')) missing.push('HttpOnly');
-      const ss = a.find(x => x.startsWith('samesite'));
-      if (!ss) missing.push('SameSite');
-      if (missing.length) out.push(f('cookies', missing.includes('Secure') ? 'error' : 'warn', `Cookie "${name}" missing ${missing.join(', ')}`, `Set-Cookie: ${c.slice(0, 120)}`,
-        `Example: Set-Cookie: ${name}=...; Path=/; Secure; HttpOnly; SameSite=Lax\n  Express: res.cookie(name, v, { secure: true, httpOnly: true, sameSite: "lax" })  (omit HttpOnly only if JS must read it)`));
-      if (ss && /samesite\s*=\s*none/.test(ss) && !a.includes('secure')) out.push(f('cookies', 'error', `Cookie "${name}" SameSite=None without Secure`, 'Browsers reject SameSite=None cookies without Secure.', 'Add the Secure attribute.'));
-    }
-    return out;
+    if (!ctx.setCookies?.length) return [];
+    const n = ctx.setCookies.length;
+    return [f(
+      'cookies',
+      'warn',
+      `Set-Cookie present (${n} header${n === 1 ? '' : 's'})`,
+      'header-sentinel only flags cookie presence; use cookie-sentinel for Secure, HttpOnly, SameSite, prefix, and expiry audits.',
+      'Run: npx cookie-sentinel <url>  — https://github.com/MrLouisWright/cookie-sentinel',
+    )];
   },
 
   'x-xss-protection'(ctx) {

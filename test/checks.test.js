@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 import { writeFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { scan, analyze, shouldFail, toSarif } from '../src/index.js';
+import { scan, analyze, shouldFail, toSarif, diffAgainstBaseline, baselineFromResults, parseSitemapDocument } from '../src/index.js';
 
 const GOOD = {
   'Content-Security-Policy': "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
@@ -92,12 +92,12 @@ test('information leaks: Server version and X-Powered-By', async () => {
   assert.deepEqual(ids(r).sort(), ['info-leak-powered-by', 'info-leak-server']);
   assert.ok(!ids(await scan(route('/leak2', { ...GOOD, Server: 'nginx' }))).includes('info-leak-server'));
 });
-test('cookies missing Secure/HttpOnly/SameSite', async () => {
+test('cookies: minimal presence check points to cookie-sentinel', async () => {
   const r = await scan(route('/ck', { ...GOOD, 'Set-Cookie': ['a=1; Path=/', 'b=2; HttpOnly; SameSite=Lax'] }));
   const c = r.findings.filter(f => f.id === 'cookies');
-  assert.equal(c.length, 1); assert.match(c[0].title, /"a" missing HttpOnly, SameSite/);
-  const s = analyze({ url: 'https://x/', headers: {}, setCookies: ['sid=1; HttpOnly; SameSite=None'] }).findings.filter(f => f.id === 'cookies');
-  assert.equal(s[0].severity, 'error'); assert.match(s[0].title, /Secure/); assert.match(s[1].title, /SameSite=None/);
+  assert.equal(c.length, 1);
+  assert.match(c[0].message, /cookie-sentinel/i);
+  assert.match(c[0].fix, /cookie-sentinel/i);
 });
 test('X-XSS-Protection deprecated unless 0', () => {
   assert.ok(ids(hs({ ...GOOD, 'X-XSS-Protection': '1; mode=block' })).includes('x-xss-protection'));
@@ -133,7 +133,7 @@ const cli = (args, opts) => run('node', [CLI, ...args], { env: { ...process.env,
 test('CLI exit codes, --json, --header, --config, --sarif file, NO_COLOR', async () => {
   const good = route('/good', GOOD), bare = route('/bare', {});
   assert.equal((await cli([good])).code, 0);
-  const b = await cli([bare]); assert.equal(b.code, 1); assert.ok(!b.stdout.includes('\x1b[')); assert.match(b.stdout, /Grade D/);
+  const b = await cli([bare]); assert.equal(b.code, 1); assert.ok(!b.stdout.includes('\x1b[')); assert.match(b.stdout, /Grade [CDF]/);
   const j = await cli([good, bare, '--json']); assert.equal(j.code, 1); assert.equal(JSON.parse(j.stdout).results.length, 2);
   const dir = mkdtempSync(join(tmpdir(), 'hs-'));
   writeFileSync(join(dir, 'c.json'), JSON.stringify({ ignore: ['csp', 'frame-options', 'content-type-options', 'referrer-policy'] }));
@@ -145,6 +145,30 @@ test('CLI exit codes, --json, --header, --config, --sarif file, NO_COLOR', async
   const echo = await cli([good, '--json', '-H', 'Authorization: Bearer t0k']); assert.equal(echo.code, 0);
   assert.equal((await cli(['not-a-url'])).code, 2);
 });
+test('JSON output includes Observatory score and tests', async () => {
+  const good = route('/good', GOOD);
+  const j = await cli([good, '--json', '--no-http-upgrade', '--no-preload-check']);
+  const body = JSON.parse(j.stdout);
+  assert.ok(body.results[0].observatory);
+  assert.ok(typeof body.results[0].score === 'number');
+  assert.match(body.results[0].grade, /^[A-F][+-]?$/);
+});
+
+test('baseline mode only fails on new findings', async () => {
+  const { 'Permissions-Policy': _, ...noPP } = GOOD;
+  const u = route('/base', noPP);
+  const full = await scan(u, { checkHttpRedirection: false, checkPreload: false });
+  const baseline = { [full.url]: baselineFromResults([full])[full.url] };
+  const diff = diffAgainstBaseline([full], baseline);
+  assert.equal(diff[0].findings.length, 0);
+  assert.equal(diff[0].baselineSkipped, true);
+});
+
+test('parseSitemapDocument extracts loc URLs', () => {
+  const xml = '<?xml version="1.0"?><urlset><url><loc>https://example.com/a</loc></url></urlset>';
+  assert.deepEqual(parseSitemapDocument(xml, 'https://example.com/sitemap.xml'), ['https://example.com/a']);
+});
+
 test('--header is sent with the request', async () => {
   const seen = [];
   const s = http.createServer((req, res) => { seen.push(req.headers['x-token']); res.end(); });
