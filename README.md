@@ -171,6 +171,10 @@ if (shouldFail(results, 'error')) process.exit(1);
 
 Types are generated in `dist/index.d.ts` (`import` / `require` typings via `dist/index.d.cts`).
 
+## Support
+
+If this project is useful to you, you can support its development with a donation: [Buy me a coffee](https://donate.stripe.com/aFa00lek3cvX4Ds2Fk9EI0b). It helps keep these tools maintained, documented and free for everyone.
+
 ## License
 
 MIT © Louis Wright ([Louis Wright](https://github.com/MrLouisWright))
