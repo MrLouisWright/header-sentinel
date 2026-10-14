@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - 2026-10-14
+
+- **Scoring:** Mozilla HTTP Observatory-style score, letter grade (A+ through F), and likelihood indicator on every scan; exposed in CLI JSON and `observatory` on API results.
+- **Redirects & HSTS:** HTTP→HTTPS upgrade checks (redirect chain), HSTS preload-list lookup via hstspreload.org, and preload-eligibility hints on HTTPS responses.
+- **Multi-URL / CI:** `--sitemap`, `--baseline` / `--update-baseline` for sitemap-driven scans and failing only on new issues vs a baseline file.
+- **Package:** Dual ESM + CommonJS `exports` (`import` / `require`), generated `.d.ts` from source via `tsup`, expanded tests (including `require` + `import`), CI runs `npm ci`.
+- **Scope:** Set-Cookie reduced to a presence hint pointing to [cookie-sentinel](https://github.com/MrLouisWright/cookie-sentinel); CSP remains live-header lint only (no generation).
+
 ## 1.0.4 - 2026-10-13
 
 - CI: harden workflows (actions pinned to SHAs, least-privilege permissions, persist-credentials: false)
