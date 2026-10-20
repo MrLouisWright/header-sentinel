@@ -67,3 +67,16 @@ footer a{color:var(--fg)}
 .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px}
 @media (max-width:520px){.hero{padding:56px 0 40px}.tagline{font-size:17px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* demo sections (passglyph, favipulse): aliases so their demo.css follows this palette */
+:root{--text:var(--fg);--text-2:var(--fg);--line-2:var(--line);--panel:var(--soft);--panel-2:var(--soft);--bg-elev:var(--bg);--soft-2:var(--soft);--r:8px;--r-sm:6px}
+.demo input,.demo select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.demo button{font:500 14px var(--sans);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.demo button:hover{border-color:var(--muted)}
+.demo label{display:block;font-size:14px;color:var(--muted);margin:12px 0 6px}
+.demo fieldset{border:0;padding:0;margin:12px 0}
+.demo legend{font-size:14px;color:var(--muted);margin-bottom:6px}
+.demo table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0}
+.demo th,.demo td{text-align:left;padding:8px 0;border-bottom:1px solid var(--line)}
+.demo th{font-weight:500;color:var(--muted)}
+.fp-note{font-size:14px;color:var(--muted)}
+.demo canvas{max-width:100%;height:auto}
