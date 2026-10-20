@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2 - 2026-10-20
+
+- Release workflow installs dependencies before publishing.
+- Docs: README credit and support sections, blog images.
+- No changes to the package code.
+
 ## 1.1.0 - 2026-10-14
 
 - **Scoring:** Mozilla HTTP Observatory-style score, letter grade (A+ through F), and likelihood indicator on every scan; exposed in CLI JSON and `observatory` on API results.
